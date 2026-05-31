@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_engine
+    volumes:
+      # Mounts your local config file directly inside the container filesystem container path
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring_backbone
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_visualization
+    ports:
+      - "3000:3000"
+    environment:
+      # Injects administrative environment variables to set the initial login credentials
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring_backbone
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_agent
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring_backbone
+    # Node Exporter needs access to the host's actual hardware metrics
+    pid: host
+    restart: unless-stopped
+
+networks:
+  monitoring_backbone:
+    driver: bridge
